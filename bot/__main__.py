@@ -14,6 +14,8 @@ from bot.helper.telegram_helper.message_utils import *
 from .helper.ext_utils.bot_utils import get_readable_file_size, get_readable_time
 from .helper.telegram_helper.filters import CustomFilters
 from .modules import authorize, list, cancel_mirror, mirror_status, mirror, clone, watch
+from git import Repo
+from git.exc import GitCommandError, InvalidGitRepositoryError, NoSuchPathError
 
 
 @run_async
@@ -42,13 +44,75 @@ def repo(update, context):
     reply_to_message_id=update.message.message_id,
     text="*Repo*: `https://github.com/jagrit007/python-aria-mirror-bot`", parse_mode="Markdown")
 
+
+def gen_chlog(repo, diff):
+    ch_log = ''
+    d_form = "%d/%m/%y"
+    for c in repo.iter_commits(diff):
+        ch_log += f'• [{c.committed_datetime.strftime(d_form)}]: {c.summary} <{c.author}>\n'
+    return ch_log
+
+
+# --- Reference: https://github.com/jagrit007/tgUserBot/blob/master/userbot/modules/updater.py
+
+@run_async
+def update(update, context):
+    branches = ["master", "staging"]
+    text = update.effective_message.text
+    msg = sendMessage("Fetching Updates....", context.bot, update)
+    repo_url = "https://github.com/jagrit007/python-aria-mirror-bot.git"
+    try:
+        repo = Repo()
+    except NoSuchPathError as error:
+        msg.edit_text(f'`directory {error} is not found`', parse_mode="Markdown")
+        return
+    except InvalidGitRepositoryError as error:
+        msg.edit_text(f'`directory {error} does not seems to be a git repository`', parse_mode="Markdown")
+        return
+    except GitCommandError as error:
+        msg.edit_text(f'`Early failure! {error}`', parse_mode="Markdown")
+        return
+    except:
+        msg.edit_text("Something's Wrong, Please manually pull.")
+    branch = repo.active_branch.name
+    if branch not in branches:
+        msg.edit_text("Seems like you are using a custom branch!")
+        return
+    try:
+        repo.create_remote('upstream', repo_url)
+    except:
+        pass
+    remote = repo.remote('upstream')
+    remote.fetch(branch)
+    clogs = gen_chlog(repo, f'HEAD..upstream/{branch}')
+
+    if not clogs:
+        msg.edit_text(f"Bot up-to-date with *{branch}*", parse_mode="Markdown")
+        return
+    if not "now" in text:
+        msg.edit_text(f"*New Update Available*\nCHANGELOG:\n\n{clogs}\n\n\nDo `/update now` to Update BOT.", parse_mode="Markdown")
+        return
+    try:
+        remote.pull(branch)
+        msg.edit_text(f"*Successfully Updated BOT, Attempting to restart!*", parse_mode="Markdown")
+        _restart(msg)
+    
+    except GitCommandError:
+        remote.git.reset('--hard')
+        msg.edit_text(f"*Successfully Updated BOT, Attempting to restart!*", parse_mode="Markdown")
+        _restart(msg)
+
+
+def _restart(reply):
+    # Save restart message object in order to reply to it after restarting
+    with open('restart.pickle', 'wb') as status:
+        pickle.dump(reply, status)
+    execl(executable, executable, "-m", "bot")
+
 @run_async
 def restart(update, context):
     restart_message = sendMessage("Restarting, Please wait!", context.bot, update)
-    # Save restart message object in order to reply to it after restarting
-    with open('restart.pickle', 'wb') as status:
-        pickle.dump(restart_message, status)
-    execl(executable, executable, "-m", "bot")
+    _restart(restart_message)
 
 
 def ping(update, context):
@@ -92,6 +156,8 @@ def bot_help(update, context):
 
 /{BotCommands.RepoCommand}: Get the bot repo.
 
+/{BotCommands.UpdateCommand}: Update the BOT with git repository.
+
 '''
     sendMessage(help_string, context.bot, update)
 
@@ -118,6 +184,8 @@ def main():
     log_handler = CommandHandler(BotCommands.LogCommand, log, filters=CustomFilters.owner_filter)
     repo_handler = CommandHandler(BotCommands.RepoCommand, repo,
                                    filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
+    update_handler = CommandHandler(BotCommands.UpdateCommand, update,
+                                   filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
     dispatcher.add_handler(start_handler)
     dispatcher.add_handler(ping_handler)
     dispatcher.add_handler(restart_handler)
@@ -125,6 +193,7 @@ def main():
     dispatcher.add_handler(stats_handler)
     dispatcher.add_handler(log_handler)
     dispatcher.add_handler(repo_handler)
+    dispatcher.add_handler(update_handler)
     updater.start_polling()
     LOGGER.info("Bot Started!")
     signal.signal(signal.SIGINT, fs_utils.exit_clean_up)

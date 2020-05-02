@@ -19,5 +19,6 @@ class _BotCommands:
         self.WatchCommand = 'vid'
         self.TarWatchCommand = 'vidtar'
         self.RepoCommand = "repo"
+        self.UpdateCommand = "update"
 
 BotCommands = _BotCommands()
