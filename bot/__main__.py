@@ -37,6 +37,12 @@ def start(update,context):
 
 
 @run_async
+def repo(update, context):
+    bot.send_message(update.message.chat_id,
+    reply_to_message_id=update.message.message_id,
+    text="*Repo*: `https://github.com/jagrit007/python-aria-mirror-bot`", parse_mode="Markdown")
+
+@run_async
 def restart(update, context):
     restart_message = sendMessage("Restarting, Please wait!", context.bot, update)
     # Save restart message object in order to reply to it after restarting
@@ -84,6 +90,8 @@ def bot_help(update, context):
 
 /{BotCommands.LogCommand}: Get a log file of the bot. Handy for getting crash reports
 
+/{BotCommands.RepoCommand}: Get the bot repo.
+
 '''
     sendMessage(help_string, context.bot, update)
 
@@ -108,12 +116,15 @@ def main():
     stats_handler = CommandHandler(BotCommands.StatsCommand,
                                    stats, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
     log_handler = CommandHandler(BotCommands.LogCommand, log, filters=CustomFilters.owner_filter)
+    repo_handler = CommandHandler(BotCommands.RepoCommand, repo,
+                                   filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
     dispatcher.add_handler(start_handler)
     dispatcher.add_handler(ping_handler)
     dispatcher.add_handler(restart_handler)
     dispatcher.add_handler(help_handler)
     dispatcher.add_handler(stats_handler)
     dispatcher.add_handler(log_handler)
+    dispatcher.add_handler(repo_handler)
     updater.start_polling()
     LOGGER.info("Bot Started!")
     signal.signal(signal.SIGINT, fs_utils.exit_clean_up)
