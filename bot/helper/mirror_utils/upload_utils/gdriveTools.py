@@ -68,8 +68,12 @@ class GoogleDriveHelper:
     def getIdFromUrl(link: str):
         if "folders" in link or "file" in link:
             return link.rsplit('/')[-1]
+        if "folderview?id=" in link:
+            return link.rsplit('=')[-1]
         if "view" in link:
             return link.rsplit('/')[-2]
+        if len(link) == 33:
+            return link
         parsed = urlparse.urlparse(link)
         return parse_qs(parsed.query)['id'][0]
 
