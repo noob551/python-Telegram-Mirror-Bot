@@ -42,7 +42,7 @@ def start(update,context):
 def repo(update, context):
     bot.send_message(update.message.chat_id,
     reply_to_message_id=update.message.message_id,
-    text="*Repo*: `https://github.com/jagrit007/python-aria-mirror-bot`", parse_mode="Markdown")
+    text="*Repo*: `https://github.com/jagrit007/python-Telegram-Mirror-Bot`", parse_mode="Markdown")
 
 
 def gen_chlog(repo, diff):
@@ -60,7 +60,7 @@ def update(update, context):
     branches = ["master", "staging"]
     text = update.effective_message.text
     msg = sendMessage("Fetching Updates....", context.bot, update)
-    repo_url = "https://github.com/jagrit007/python-aria-mirror-bot.git"
+    repo_url = "https://github.com/jagrit007/python-Telegram-Mirror-Bot.git"
     try:
         repo = Repo()
     except NoSuchPathError as error:
