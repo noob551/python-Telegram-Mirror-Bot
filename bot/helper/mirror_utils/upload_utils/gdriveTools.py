@@ -66,6 +66,8 @@ class GoogleDriveHelper:
 
     @staticmethod
     def getIdFromUrl(link: str):
+        if "?usp=sharing" in link:
+            link = link.replace("?usp=sharing", "")
         if "folders" in link or "file" in link:
             return link.rsplit('/')[-1]
         if "folderview?id=" in link:
