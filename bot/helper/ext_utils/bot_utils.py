@@ -97,8 +97,8 @@ def get_readable_message():
                     f"\n<b>Speed:</b> <code>{download.speed()}</code>   <b>ETA:</b> <code>{download.eta()}</code> "
             if download.status() == MirrorStatus.STATUS_DOWNLOADING:
                 if hasattr(download, 'is_torrent'):
-                    msg += f"\n<b>Info:</b> <code>Seeders: {download.download().num_seeders}</code>" \
-                           f"   <code>Peers: {download.download().connections}</code>"
+                    msg += f"\n<b>Info:</b> <code>Seeders: {download.aria_download().num_seeders}</code>" \
+                           f"   <code>Peers: {download.aria_download().connections}</code>"
                 msg += f"\nGID: <code>{download.gid()}</code>"
             msg += "\n\n"
         return msg
