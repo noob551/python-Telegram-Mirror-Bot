@@ -25,7 +25,7 @@ Deploying is pretty much straight forward and is divided into several steps as f
 
 - Clone this repo:
 ```
-git clone https://github.com/lzzy12/python-aria-mirror-bot mirror-bot/
+git clone https://github.com/jagrit007/python-Telegram-Mirror-Bot mirror-bot/
 cd mirror-bot
 ```
 
